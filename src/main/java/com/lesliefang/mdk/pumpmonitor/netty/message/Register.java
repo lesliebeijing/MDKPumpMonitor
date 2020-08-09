@@ -27,7 +27,7 @@ public class Register {
         responseMessageMap.put(CMD.INFUSION_PUMP_WORK_INFO_ASK, InfusionPumpWorkInfoAskReply.class);
         responseMessageMap.put(CMD.INFUSION_PUMP_WORK_PARAM_ASK, InfusionPumpWorkParamAskReply.class);
         responseMessageMap.put(CMD.INFUSION_PUMP_WORK_PARAM_DL, InfusionWorkParamDownloadReply.class);
-        responseMessageMap.put(CMD.INFUSION_PUMP_WEIGHT_PARAM_ASK, InfusionPumpWorkParamAskReply.class);
+        responseMessageMap.put(CMD.INFUSION_PUMP_WEIGHT_PARAM_ASK, InfusionPumpWeightParamAskReply.class);
         responseMessageMap.put(CMD.INFUSION_PUMP_WEIGHT_PARAM_DL, InfusionPumpWeightParamDownloadReply.class);
 
         responseMessageMap.put(CMD.FEEDING_PUMP_WORK_LOG_ASK, FeedingPumpWorkLogAskReply.class);

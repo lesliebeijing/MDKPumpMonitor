@@ -2,15 +2,15 @@ package com.lesliefang.mdk.pumpmonitor.netty.model;
 
 public class DeviceContext {
     // sn 序列号
-    private String sn;
+    protected String sn;
     // 设备类型
-    private Short deviceType;
+    protected Short deviceType;
     // 状态字
-    private short deviceState;
+    protected short deviceState;
     // 床号
-    private String bedNum;
+    protected String bedNum;
     // 泵号
-    private int slotNum;
+    protected int slotNum;
 
     public String getSn() {
         return sn;
@@ -50,16 +50,5 @@ public class DeviceContext {
 
     public void setDeviceState(short deviceState) {
         this.deviceState = deviceState;
-    }
-
-    @Override
-    public String toString() {
-        return "DeviceContext{" +
-                "sn='" + sn + '\'' +
-                ", deviceType=" + deviceType +
-                ", deviceState=" + deviceState +
-                ", bedNum='" + bedNum + '\'' +
-                ", slotNum=" + slotNum +
-                '}';
     }
 }

@@ -1,66 +1,32 @@
 package com.lesliefang.mdk.pumpmonitor.netty.message.infusion;
 
 import com.lesliefang.mdk.pumpmonitor.netty.message.ResponseMessage;
+import com.lesliefang.mdk.pumpmonitor.netty.model.infusion.InfusionPumpWeightParam;
 import io.netty.buffer.ByteBuf;
 
 public class InfusionPumpWeightParamAskReply extends ResponseMessage {
-    // 剂量
-    private int dose;
-    // 药量
-    private int amount;
-    // 溶液量
-    private int volume;
-    // 体重
-    private short weight;
-    // 剂量单位
-    private byte doseUnit;
+    private InfusionPumpWeightParam infusionPumpWeightParam;
 
     @Override
     public void parseResponseData(ByteBuf in) {
-        dose = in.readIntLE();
-        amount = in.readInt();
-        volume = in.readIntLE();
-        weight = in.readShortLE();
-        dose = in.readByte();
+        int dose = in.readIntLE();
+        int amount = in.readInt();
+        int volume = in.readIntLE();
+        short weight = in.readShortLE();
+        byte doseUnit = in.readByte();
+        infusionPumpWeightParam = new InfusionPumpWeightParam();
+        infusionPumpWeightParam.setDose(dose);
+        infusionPumpWeightParam.setAmount(amount);
+        infusionPumpWeightParam.setVolume(volume);
+        infusionPumpWeightParam.setWeight(weight);
+        infusionPumpWeightParam.setDoseUnit(doseUnit);
     }
 
-    public int getDose() {
-        return dose;
+    public InfusionPumpWeightParam getInfusionPumpWeightParam() {
+        return infusionPumpWeightParam;
     }
 
-    public void setDose(int dose) {
-        this.dose = dose;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public void setAmount(int amount) {
-        this.amount = amount;
-    }
-
-    public int getVolume() {
-        return volume;
-    }
-
-    public void setVolume(int volume) {
-        this.volume = volume;
-    }
-
-    public short getWeight() {
-        return weight;
-    }
-
-    public void setWeight(short weight) {
-        this.weight = weight;
-    }
-
-    public byte getDoseUnit() {
-        return doseUnit;
-    }
-
-    public void setDoseUnit(byte doseUnit) {
-        this.doseUnit = doseUnit;
+    public void setInfusionPumpWeightParam(InfusionPumpWeightParam infusionPumpWeightParam) {
+        this.infusionPumpWeightParam = infusionPumpWeightParam;
     }
 }

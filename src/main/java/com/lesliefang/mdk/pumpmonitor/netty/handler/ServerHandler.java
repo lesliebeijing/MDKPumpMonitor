@@ -2,7 +2,15 @@ package com.lesliefang.mdk.pumpmonitor.netty.handler;
 
 import com.lesliefang.mdk.pumpmonitor.netty.CMD;
 import com.lesliefang.mdk.pumpmonitor.netty.message.*;
+import com.lesliefang.mdk.pumpmonitor.netty.message.infusion.*;
 import com.lesliefang.mdk.pumpmonitor.netty.model.DeviceContext;
+import com.lesliefang.mdk.pumpmonitor.netty.model.DeviceState;
+import com.lesliefang.mdk.pumpmonitor.netty.model.DeviceType;
+import com.lesliefang.mdk.pumpmonitor.netty.model.feeding.FeedingPumpContext;
+import com.lesliefang.mdk.pumpmonitor.netty.model.gravity.GravityPumpContext;
+import com.lesliefang.mdk.pumpmonitor.netty.model.infusion.InfusionPumpContext;
+import com.lesliefang.mdk.pumpmonitor.netty.model.infusion.InfusionPumpWeightParam;
+import com.lesliefang.mdk.pumpmonitor.netty.model.workstation.WorkStationContext;
 import com.lesliefang.mdk.pumpmonitor.netty.util.Address;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -27,8 +35,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         logger.info("channelActive {}", ctx.channel().remoteAddress());
 
         // 设备首次上线发送地址查询指令
-        DeviceAddressAsk deviceAddressAsk = new DeviceAddressAsk();
-        ctx.channel().writeAndFlush(deviceAddressAsk);
+        ctx.channel().writeAndFlush(new DeviceAddressAsk());
         logger.debug(">>>{} DeviceAddressAsk", ctx.channel().remoteAddress());
     }
 
@@ -69,30 +76,44 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             logger.debug("<<<{} DeviceAddressAskReply", ctx.channel().remoteAddress());
             DeviceAddressAskReply deviceAddressAskReply = ((DeviceAddressAskReply) respMsg);
             String sn = Address.parsePumpAddress(respMsg.getSrcAddress());
-            if (sn != null) {
-                ctx.channel().attr(snKey).set(sn);
-                DeviceContext deviceContext = new DeviceContext();
-                deviceContext.setSn(sn);
-                deviceContext.setDeviceType(deviceAddressAskReply.getDeviceType());
-                deviceListMap.put(sn, deviceContext);
-                logger.debug("{} {} attach", sn, ctx.channel().remoteAddress());
-
-                ctx.channel().eventLoop().scheduleAtFixedRate(new Runnable() {
-                    @Override
-                    public void run() {
-                        // 设备状态查询
-                        DeviceStateAsk deviceStateAsk = new DeviceStateAsk();
-                        ctx.channel().writeAndFlush(deviceStateAsk);
-                        logger.debug(">>>{} DeviceStateAsk", sn);
-
-                        // 床号信息查询
-                        BedInfoAsk bedInfoAsk = new BedInfoAsk();
-                        ctx.channel().writeAndFlush(bedInfoAsk);
-                    }
-                }, 0, 2, TimeUnit.SECONDS);
-            } else {
+            if (sn == null) {
                 logger.debug("parse sn error {}", ctx.channel().remoteAddress());
+                return;
             }
+            DeviceContext deviceContext = null;
+            short deviceType = deviceAddressAskReply.getDeviceType();
+            if (deviceType == DeviceType.INFUSION_PUMP
+                    || deviceType == DeviceType.INJECTION_PUMP
+                    || deviceType == DeviceType.WORKSTATION_INFUSION_PUMP
+                    || deviceType == DeviceType.WORKSTATION_INJECTION_PUMP) {
+                deviceContext = new InfusionPumpContext();
+            } else if (deviceType == DeviceType.NUTRITION_PUMP) {
+                deviceContext = new FeedingPumpContext();
+            } else if (deviceType == DeviceType.GRAVITY_DROP_MC1
+                    || deviceType == DeviceType.GRAVITY_DROP_MC2) {
+                deviceContext = new GravityPumpContext();
+            } else if (deviceType == DeviceType.INFUSION_WORKSTATION) {
+                deviceContext = new WorkStationContext();
+            }
+            if (deviceContext == null) {
+                logger.debug("deviceContext is null {} {}", sn, ctx.channel().remoteAddress());
+                return;
+            }
+
+            ctx.channel().attr(snKey).set(sn);
+            deviceContext.setSn(sn);
+            deviceContext.setDeviceType(deviceType);
+            deviceListMap.put(sn, deviceContext);
+            logger.debug("{} {} attach", sn, ctx.channel().remoteAddress());
+
+            ctx.channel().eventLoop().scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    // 设备状态查询
+                    ctx.channel().writeAndFlush(new DeviceStateAsk());
+                    logger.debug(">>>{} DeviceStateAsk", sn);
+                }
+            }, 0, 2, TimeUnit.SECONDS);
         }
 
         String sn = ctx.channel().attr(snKey).get();
@@ -110,11 +131,68 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             logger.debug("<<<{} DeviceStateAskReply", sn);
             DeviceStateAskReply deviceStateAskReply = ((DeviceStateAskReply) respMsg);
             deviceContext.setDeviceState(deviceStateAskReply.getDeviceState());
-            logger.debug("{}", deviceContext);
+
+            // 床号信息查询
+            ctx.channel().writeAndFlush(new BedInfoAsk());
+            logger.debug(">>>{} BedInfoAsk", sn);
+
+            short deviceType = deviceContext.getDeviceType();
+            short deviceState = deviceContext.getDeviceState();
+            if (deviceType == DeviceType.INFUSION_PUMP
+                    || deviceType == DeviceType.INJECTION_PUMP
+                    || deviceType == DeviceType.WORKSTATION_INFUSION_PUMP
+                    || deviceType == DeviceType.WORKSTATION_INJECTION_PUMP) {
+                if (deviceState == DeviceState.DEVICE_STAT_NM_INFUSION
+                        || deviceState == DeviceState.DEVICE_STAT_NM_INJECTING) {
+                    ctx.channel().eventLoop().schedule(new Runnable() {
+                        @Override
+                        public void run() {
+                            // 工作信息查询
+                            ctx.channel().writeAndFlush(new InfusionPumpWorkInfoAsk());
+                            logger.debug(">>>{} InfusionPumpWorkInfoAsk", sn);
+                        }
+                    }, 500, TimeUnit.MILLISECONDS);
+                } else {
+                    ctx.channel().eventLoop().schedule(new Runnable() {
+                        @Override
+                        public void run() {
+                            // 工作参数查询
+                            ctx.channel().writeAndFlush(new InfusionPumpWorkParamAsk());
+                            logger.debug(">>>{} InfusionPumpWorkParamAsk", sn);
+                        }
+                    }, 500, TimeUnit.MILLISECONDS);
+                    ctx.channel().eventLoop().schedule(new Runnable() {
+                        @Override
+                        public void run() {
+                            // 体重参数查询
+                            ctx.channel().writeAndFlush(new InfusionPumpWeightParamAsk());
+                            logger.debug(">>>{} InfusionPumpWeightParamAsk", sn);
+                        }
+                    }, 1000, TimeUnit.MILLISECONDS);
+                }
+            }
         } else if (cmd == CMD.BED_INFO_ASK) {
+            logger.debug("<<<{} BedInfoAskReply", sn);
             BedInfoAskReply bedInfoAskReply = ((BedInfoAskReply) respMsg);
             deviceContext.setBedNum(bedInfoAskReply.getBedNum() + "");
+        } else if (cmd == CMD.INFUSION_PUMP_WORK_INFO_ASK) {
+            logger.debug("<<<{} InfusionPumpWorkInfoAskReply", sn);
+            InfusionPumpContext infusionPumpContext = ((InfusionPumpContext) deviceContext);
+            InfusionPumpWorkInfoAskReply infusionPumpWorkInfoAskReply = ((InfusionPumpWorkInfoAskReply) respMsg);
+            infusionPumpContext.setWorkInfo(infusionPumpWorkInfoAskReply.getInfusionPumpWorkInfo());
+        } else if (cmd == CMD.INFUSION_PUMP_WORK_PARAM_ASK) {
+            logger.debug("<<<{} InfusionPumpWorkParamAskReply", sn);
+            InfusionPumpContext infusionPumpContext = ((InfusionPumpContext) deviceContext);
+            InfusionPumpWorkParamAskReply infusionPumpWorkParamAskReply = ((InfusionPumpWorkParamAskReply) respMsg);
+            infusionPumpContext.setWorkParam(infusionPumpWorkParamAskReply.getInfusionPumpWorkParam());
+        } else if (cmd == CMD.INFUSION_PUMP_WEIGHT_PARAM_ASK) {
+            logger.debug("<<<{} InfusionPumpWeightParamAskReply", sn);
+            InfusionPumpContext infusionPumpContext = ((InfusionPumpContext) deviceContext);
+            InfusionPumpWeightParamAskReply infusionPumpWeightParamAskReply = ((InfusionPumpWeightParamAskReply) respMsg);
+            infusionPumpContext.setWeightParam(infusionPumpWeightParamAskReply.getInfusionPumpWeightParam());
         }
+
+        logger.debug("{}", deviceContext);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.lesliefang.mdk.pumpmonitor.netty.handler;
 
-import com.lesliefang.mdk.pumpmonitor.netty.CMD;
 import com.lesliefang.mdk.pumpmonitor.netty.message.Message;
 import com.lesliefang.mdk.pumpmonitor.netty.message.Register;
 import com.lesliefang.mdk.pumpmonitor.netty.message.ResponseMessage;

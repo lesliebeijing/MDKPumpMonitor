@@ -1,254 +1,73 @@
 package com.lesliefang.mdk.pumpmonitor.netty.message.infusion;
 
 import com.lesliefang.mdk.pumpmonitor.netty.message.ResponseMessage;
+import com.lesliefang.mdk.pumpmonitor.netty.model.infusion.InfusionPumpLog;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.CharsetUtil;
 
 public class InfusionPumpLogAskReply extends ResponseMessage {
-    private int logId;
-    private short year;
-    private byte month;
-    private byte day;
-    private byte hour;
-    private byte minute;
-    private byte second;
-    private short eventId;
-    private short bedNum;
-    private int patientId;
-    private String drugName;
-    private int rate;
-    private int time;
-    private int vtbi; // 总量
-    private int vi; // 累积量
-    private int dose; // 剂量
-    private int amount; // 药量
-    private int volume; // 溶液量
-    private short weight; // 体重
-    private byte doseUnit; // 剂量单位
-    private byte occlu; // 压力
-    private byte brand; // 耗材
-    private byte mode; // 工作模式
-    private int prescId; // 处方ID
+    private InfusionPumpLog infusionPumpLog;
 
     @Override
     public void parseResponseData(ByteBuf in) {
-        logId = in.readIntLE();
-        year = in.readShortLE();
-        month = in.readByte();
-        day = in.readByte();
-        hour = in.readByte();
-        minute = in.readByte();
-        second = in.readByte();
-        eventId = in.readShortLE();
-        bedNum = in.readShortLE();
-        patientId = in.readIntLE();
+        int logId = in.readIntLE();
+        short year = in.readShortLE();
+        byte month = in.readByte();
+        byte day = in.readByte();
+        byte hour = in.readByte();
+        byte minute = in.readByte();
+        byte second = in.readByte();
+        short eventId = in.readShortLE();
+        short bedNum = in.readShortLE();
+        int patientId = in.readIntLE();
         byte[] drugBytes = new byte[40];
         in.readBytes(drugBytes);
-        drugName = new String(drugBytes, CharsetUtil.UTF_8);
-        rate = in.readIntLE();
-        time = in.readIntLE();
-        vtbi = in.readIntLE();
-        vi = in.readIntLE();
-        dose = in.readIntLE();
-        amount = in.readIntLE();
-        volume = in.readIntLE();
-        weight = in.readShortLE();
-        doseUnit = in.readByte();
-        occlu = in.readByte();
-        brand = in.readByte();
-        mode = in.readByte();
-        prescId = in.readIntLE();
+        String drugName = new String(drugBytes, CharsetUtil.UTF_8);
+        int rate = in.readIntLE();
+        int time = in.readIntLE();
+        int vtbi = in.readIntLE();
+        int vi = in.readIntLE();
+        int dose = in.readIntLE();
+        int amount = in.readIntLE();
+        int volume = in.readIntLE();
+        short weight = in.readShortLE();
+        byte doseUnit = in.readByte();
+        byte occlu = in.readByte();
+        byte brand = in.readByte();
+        byte mode = in.readByte();
+        int prescId = in.readIntLE();
+        infusionPumpLog = new InfusionPumpLog();
+        infusionPumpLog.setLogId(logId);
+        infusionPumpLog.setYear(year);
+        infusionPumpLog.setMonth(month);
+        infusionPumpLog.setDay(day);
+        infusionPumpLog.setHour(hour);
+        infusionPumpLog.setMinute(minute);
+        infusionPumpLog.setSecond(second);
+        infusionPumpLog.setEventId(eventId);
+        infusionPumpLog.setBedNum(bedNum);
+        infusionPumpLog.setPatientId(patientId);
+        infusionPumpLog.setDrugName(drugName);
+        infusionPumpLog.setRate(rate);
+        infusionPumpLog.setTime(time);
+        infusionPumpLog.setVtbi(vtbi);
+        infusionPumpLog.setVi(vi);
+        infusionPumpLog.setDose(dose);
+        infusionPumpLog.setAmount(amount);
+        infusionPumpLog.setVolume(volume);
+        infusionPumpLog.setWeight(weight);
+        infusionPumpLog.setDoseUnit(doseUnit);
+        infusionPumpLog.setOcclu(occlu);
+        infusionPumpLog.setBrand(brand);
+        infusionPumpLog.setMode(mode);
+        infusionPumpLog.setPrescId(prescId);
     }
 
-    public int getLogId() {
-        return logId;
+    public InfusionPumpLog getInfusionPumpLog() {
+        return infusionPumpLog;
     }
 
-    public void setLogId(int logId) {
-        this.logId = logId;
-    }
-
-    public short getYear() {
-        return year;
-    }
-
-    public void setYear(short year) {
-        this.year = year;
-    }
-
-    public byte getMonth() {
-        return month;
-    }
-
-    public void setMonth(byte month) {
-        this.month = month;
-    }
-
-    public byte getDay() {
-        return day;
-    }
-
-    public void setDay(byte day) {
-        this.day = day;
-    }
-
-    public byte getHour() {
-        return hour;
-    }
-
-    public void setHour(byte hour) {
-        this.hour = hour;
-    }
-
-    public byte getMinute() {
-        return minute;
-    }
-
-    public void setMinute(byte minute) {
-        this.minute = minute;
-    }
-
-    public byte getSecond() {
-        return second;
-    }
-
-    public void setSecond(byte second) {
-        this.second = second;
-    }
-
-    public short getEventId() {
-        return eventId;
-    }
-
-    public void setEventId(short eventId) {
-        this.eventId = eventId;
-    }
-
-    public short getBedNum() {
-        return bedNum;
-    }
-
-    public void setBedNum(short bedNum) {
-        this.bedNum = bedNum;
-    }
-
-    public int getPatientId() {
-        return patientId;
-    }
-
-    public void setPatientId(int patientId) {
-        this.patientId = patientId;
-    }
-
-    public String getDrugName() {
-        return drugName;
-    }
-
-    public void setDrugName(String drugName) {
-        this.drugName = drugName;
-    }
-
-    public int getRate() {
-        return rate;
-    }
-
-    public void setRate(int rate) {
-        this.rate = rate;
-    }
-
-    public int getTime() {
-        return time;
-    }
-
-    public void setTime(int time) {
-        this.time = time;
-    }
-
-    public int getVtbi() {
-        return vtbi;
-    }
-
-    public void setVtbi(int vtbi) {
-        this.vtbi = vtbi;
-    }
-
-    public int getVi() {
-        return vi;
-    }
-
-    public void setVi(int vi) {
-        this.vi = vi;
-    }
-
-    public int getDose() {
-        return dose;
-    }
-
-    public void setDose(int dose) {
-        this.dose = dose;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public void setAmount(int amount) {
-        this.amount = amount;
-    }
-
-    public int getVolume() {
-        return volume;
-    }
-
-    public void setVolume(int volume) {
-        this.volume = volume;
-    }
-
-    public short getWeight() {
-        return weight;
-    }
-
-    public void setWeight(short weight) {
-        this.weight = weight;
-    }
-
-    public byte getDoseUnit() {
-        return doseUnit;
-    }
-
-    public void setDoseUnit(byte doseUnit) {
-        this.doseUnit = doseUnit;
-    }
-
-    public byte getOcclu() {
-        return occlu;
-    }
-
-    public void setOcclu(byte occlu) {
-        this.occlu = occlu;
-    }
-
-    public byte getBrand() {
-        return brand;
-    }
-
-    public void setBrand(byte brand) {
-        this.brand = brand;
-    }
-
-    public byte getMode() {
-        return mode;
-    }
-
-    public void setMode(byte mode) {
-        this.mode = mode;
-    }
-
-    public int getPrescId() {
-        return prescId;
-    }
-
-    public void setPrescId(int prescId) {
-        this.prescId = prescId;
+    public void setInfusionPumpLog(InfusionPumpLog infusionPumpLog) {
+        this.infusionPumpLog = infusionPumpLog;
     }
 }
