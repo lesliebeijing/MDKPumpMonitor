@@ -12,6 +12,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,10 +33,10 @@ public class NettyServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-//                            ch.pipeline().addLast(new IdleStateHandler(READ_TIMEOUT, 0, 0));
                             ch.pipeline().addLast(new MyLengthFieldBasedFrameDecoder());
                             ch.pipeline().addLast(new MessageEncoder());
                             ch.pipeline().addLast(new MessageDecoder());
+                            ch.pipeline().addLast(new IdleStateHandler(READ_TIMEOUT, 0, 0));
                             ch.pipeline().addLast(new ServerHandler());
                         }
                     });

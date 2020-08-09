@@ -51,7 +51,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
         byte checkSum = in.readByte();
 
-        Class<? extends ResponseMessage> cls = Register.responseMessageMap.get(CMD.DEVICE_ADDRESS_ASK);
+        Class<? extends ResponseMessage> cls = Register.responseMessageMap.get(cmd);
         if (cls != null) {
             ResponseMessage respMsg = cls.newInstance();
             respMsg.setDestAddress(destAddress);
